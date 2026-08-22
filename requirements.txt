@@ -1,0 +1,14 @@
+# Perennial snow pipeline + validation
+numpy
+pandas
+xarray
+rioxarray
+rasterio
+pyproj
+shapely
+matplotlib
+scikit-learn
+pystac-client
+planetary-computer
+# validation reference download (Theia LIS SCD via hydroweb.next) — needs an account + API key
+py-hydroweb

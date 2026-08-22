@@ -25,16 +25,16 @@ required factor and perennial snow can act as a separate land cover layer for th
 
 - **Perennial mask**, 2017–2024, nadir-weighted, with a full honesty layer (decided-years count,
   per-pixel confidence, and a reason for every non-verdict pixel).
-  ![all classes visualization](figures\mask_visualization.png)
+  ![all classes visualization](figures/mask_visualization.png)
 - **Interannual change** (2019, 2022, 2023, 2024) on the ~25% of the AOI reliably observed in all four
   years — reported as a trend on that observable subset, explicitly not basin-wide.
-  ![interannual change graph and pixel subset](figures\interannual_change.png)
+  ![interannual change graph and pixel subset](figures/interannual_change.png)
 - **Validation** against the Theia Sentinel-2 Snow Cover Yearly Synthesis (LIS SCD) over Mont Blanc:
   Cohen's kappa **0.86** at the definitional threshold (SCD ≥ 360 days), stable 0.83–0.87, high
   precision throughout. Every disagreement pixel is accounted for: the method additionally maps
   glacier tongues that Theia excludes via its DEM snowline gate, and is slightly more conservative on
   shadowed north-facing slopes.
-  ![additional cells that theia excludes](figures\additional_NDSI_mapping_that_theia_excludes.png)
+  ![additional cells that theia excludes](figures/additional_NDSI_mapping_that_theia_excludes.png)
 
 
 

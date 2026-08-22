@@ -23,7 +23,7 @@ required factor and perennial snow can act as a separate land cover layer for th
 
 ## Key results
 
-- **Perennial mask**, 2017–2024, nadir-weighted, with a full honesty layer (decided-years count,
+- **Perennial mask**, 2017–2024, ablation-minimum-weighted, with a full honesty layer (decided-years count,
   per-pixel confidence, and a reason for every non-verdict pixel).
   ![all classes visualization](figures\mask_visualization.png)
 - **Interannual change** (2019, 2022, 2023, 2024) on the ~25% of the AOI reliably observed in all four
@@ -107,7 +107,7 @@ export HYDROWEB_API_KEY=...
 - The interannual-change trend is measured on the reliably-observed subset (~25% of the AOI), **not**
   basin-wide; observation is uneven (cloud, terrain shadow, sensor gaps). No aspect-differentiated
   melt claim is made.
-- The nadir-recency confidence weighting is a phenology-grounded **heuristic**, not a derived formula.
+- The ablation-minimum timing weighting is a phenology-grounded **heuristic**, not a derived formula.
 - Thresholds are tuned for these AOIs; wide-area / operational use would need re-grounding
   (see the localisation notes in `DECISIONS.md`).
 

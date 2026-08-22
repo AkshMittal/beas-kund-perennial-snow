@@ -75,7 +75,7 @@ otherwise **bare-that-year**; a year abstains entirely if it has too few looks t
 - **Tried:** per-epoch veto — mark the year bare if *any* clear look is not-snow, and require snow
   in *every* clear look to call it perennial. **Result:** the map emptied out. Over 15–40 looks a
   year, a genuinely perennial pixel *always* catches a stray not-snow look — thin cloud dropping
-  NDSI below threshold, an off-nadir geometry, a mixed edge pixel. Demanding perfection across all
+  NDSI below threshold, a look taken far from the ablation minimum, a mixed edge pixel. Demanding perfection across all
   looks disqualifies essentially every real pixel.
 - **Fixed:** decide the year on the *fraction* of clear looks that are snow, tolerating a noise
   minority. Bare becomes a property of the year, not of any single observation.
@@ -118,7 +118,7 @@ looks in a year). Gating on snow-look count fixed it.
 
 ## 6. Asymmetric evidence: not-perennial is easier to prove than perennial
 
-- **PERENNIAL** needs the full bar: `≥ MIN_YEARS` decided years, high nadir-weighted confidence,
+- **PERENNIAL** needs the full bar: `≥ MIN_YEARS` decided years, high ablation-minimum-weighted confidence,
   **and** bare in `≤ MAX_BARE_YEARS` years.
 - **NOT-PERENNIAL** fires on bare in `> MAX_BARE_YEARS` years **regardless of total decided years**
   (no MIN_YEARS requirement).
@@ -137,7 +137,7 @@ pixels. Replaced by the `≤ MAX_BARE_YEARS` tolerance.
 
 ---
 
-## 7. Nadir-recency confidence weighting
+## 7. Ablation-minimum timing weighting
 
 Each snow look contributes a weight that peaks on the ablation-minimum plateau and decays for
 too-early (incomplete melt) or too-late (fresh-snow risk) last-looks. Per-pixel confidence is the
@@ -147,7 +147,7 @@ decided years.
 **Why:** recency matters *within* a year — a snow look at the seasonal minimum is stronger evidence
 of perennial snow than one in early August. This is an extension of the Selkowitz-style persistence
 (which weights all in-window looks equally); it is introduced because this AOI's ablation window is
-cloud-scarce, so off-nadir looks must be admitted but down-weighted rather than trusted equally.
+cloud-scarce, so off-peak looks (far from the ablation minimum) must be admitted but down-weighted rather than trusted equally.
 
 linear decrease outside the ablation-min window, floored at 0.20.
 
@@ -221,7 +221,7 @@ on that fixed ground.
   years *gains* pixels. Opposite directions, different questions.
 
 **Also rejected for the change study:**
-- **Confidence deltas (decimal change).** Differencing nadir-weighted confidence values across years
+- **Confidence deltas (decimal change).** Differencing ablation-minimum-weighted confidence values across years
   conflates real change with measurement variance — different sensors and acquisition timing give
   different confidence *values* for the *same* physical state. The verdict unit is **binary**
   (perennial-that-year yes/no) instead.
@@ -278,7 +278,7 @@ decided pixels only):
 
 - `MAX_BARE_YEARS = 2` is an absolute count, defensible for this 8-year study (2/8 = 25%). For runs
   with different year counts it should become a **fraction** of decided years for scale-invariance.
-- Thresholds (`NDSI_SNOW`, `YEAR_SNOW_FRAC`, `PERENNIAL_W`, the nadir window, the look-floors) are
+- Thresholds (`NDSI_SNOW`, `YEAR_SNOW_FRAC`, `PERENNIAL_W`, the ablation-minimum window, the look-floors) are
   tuned for these AOIs and would need re-grounding for a different climate regime.
 - **Known limitation (surfaced by validation):** the method slightly under-detects perennial snow on
   north-facing, steep, shadowed slopes, where the disagreements with Theia concentrate. This is the
@@ -292,14 +292,14 @@ decided pixels only):
 
 ## Confidence gate: a data-quality filter, not an arbitrary threshold
 
-The multi-year confidence (mean nadir-weighted per-year confidence) is not just an output layer — it
+The multi-year confidence (mean ablation-minimum-weighted per-year confidence) is not just an output layer — it
 gates the final PERENNIAL verdict (conf ≥ `PERENNIAL_W`, 0.75). At Beas Kund it is the dominant
 filter: of ~25.8k pixels that pass the persistence structure (enough decided years, snow-fraction, bare
 tolerance), the confidence gate rejects 74%, leaving ~6.7k PERENNIAL.
 
 Why this is correct behaviour, not over-rejection. Confidence is driven by observation timing —
 a pixel scores high only if its snow looks land near the ablation minimum. Under sparse, cloudy coverage
-(Beas Kund, monsoon-influenced), many genuinely-persistent pixels are only ever seen snow off-nadir,
+(Beas Kund, monsoon-influenced), many genuinely-persistent pixels are only ever seen snow off-peak (far from the ablation minimum in time),
 so they score low and are correctly held back rather than over-claimed. The gate is the mechanism by
 which the mask declines to assert perennial status on poorly-timed evidence.
 

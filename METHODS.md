@@ -62,19 +62,18 @@ cloudy Sentinel tile does not disqualify a clear Landsat pass on the same date.
 Each year's stack of clear looks is reduced to one verdict per pixel. **Bare status is a yearly
 aggregate, never a per-epoch veto**: a pixel is perennial-that-year if snow appears in ≥ 80% of that
 year's clear *land* looks (water excluded), bare-that-year if ≤ 20%. A year is *decided* only with ≥ 2
-clear land looks; thinner years abstain. This tolerates the noise minority (thin cloud, off-nadir
-geometry, mixed edge pixels) that a per-epoch bare veto would let disqualify a genuinely perennial pixel.
+clear land looks; thinner years abstain. This tolerates the noise minority (thin cloud, poorly-timed looks, mixed edge pixels) that a per-epoch bare veto would let disqualify a genuinely perennial pixel.
 
-**Nadir-recency confidence.** Each snow look carries a weight peaking on the ablation-minimum plateau
+**Ablation-minimum-weighted confidence.** Each snow look carries a weight peaking on the ablation-minimum plateau
 and decaying for too-early (incomplete melt) or too-late (fresh-snow) last-looks. A pixel's per-year
 confidence is its best (highest-weighted) snow look. This is a phenology-grounded heuristic — the tent
 shape and breakpoints are an engineering choice informed by melt/accumulation timing, not a derived
-formula — introduced because this AOI's ablation window is cloud-scarce and off-nadir looks must be
+formula — introduced because this AOI's ablation window is cloud-scarce, so poorly-timed looks must be
 admitted but down-weighted rather than trusted equally.
 
 ## 6. Ablation-minimum window
 
-The nadir plateau is grounded per-AOI, because the ablation minimum is climate-regime specific:
+The ablation-minimum plateau is grounded per-AOI, because the ablation minimum is climate-regime specific:
 
 - **Beas Kund (monsoon-facing):** late August – mid September, from (a) this project's own pooled
   snow-fraction-vs-day-of-year curve (minimum ~30 Aug – 1 Sept) and (b) the same-basin Beas River Basin
@@ -87,7 +86,7 @@ The nadir plateau is grounded per-AOI, because the ablation minimum is climate-r
 ## 7. Multi-year persistence & classification
 
 Per-year verdicts are combined into a single class per pixel. Multi-year confidence is the mean of the
-(nadir-weighted) yearly confidences over decided years.
+(ablation-minimum-weighted) yearly confidences over decided years.
 
 **Asymmetric evidence:**
 - **PERENNIAL** requires `≥ MIN_YEARS` (3) decided years, mean confidence `≥ PERENNIAL_W` (0.75), and
@@ -101,7 +100,7 @@ WATER (known surface, excluded), UNDECIDED (observed but too thin), plus a defer
 
 **The confidence gate is the dominant filter and behaves as a data-quality signature.** At Beas Kund it
 rejects ~74% of pixels that pass the persistence structure, because under sparse monsoon-influenced
-coverage many persistent pixels are only ever seen snow off-nadir and are correctly withheld rather than
+coverage many persistent pixels are only ever seen snow off-peak (far from the ablation minimum in time) and are correctly withheld rather than
 over-claimed. Perennial extent is therefore threshold-sensitive under scarcity (varies 4.6× across
 `PERENNIAL_W` ∈ [0.5, 0.8]) but far less so under dense coverage (1.3× at Mont Blanc), confirming the
 gate is near-inert where data is rich and discriminating where sparse.
@@ -164,8 +163,8 @@ snow-and-ice cryosphere extent rather than snow above a snowline.
 
 *Theia-only* (Theia calls perennial, the method does not; ~4,600 px, high elevation, median ~3220 m) is a
 limitation on the *method's* side, not evidence that Theia over-includes. It splits into ~88%
-**low-confidence** (snow observed across enough years but below the nadir-weighted confidence bar —
-conservative under off-nadir or thin evidence) and ~12% **shadow-affected**. The shadow group was checked
+**low-confidence** (snow observed across enough years but below the ablation-minimum-weighted confidence bar —
+conservative under off-peak (poorly-timed) or thin evidence) and ~12% **shadow-affected**. The shadow group was checked
 by aspect: these pixels sit on markedly more north-facing (northness +0.62 vs +0.25 for agreed-perennial)
 and steeper (33° vs 25°) terrain than agreed-perennial pixels — a clear topographic-shadow correlation. They
 are also marginal (89% are bare in exactly three of six years, one past the two-year tolerance). The

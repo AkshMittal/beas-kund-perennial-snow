@@ -75,8 +75,7 @@ otherwise **bare-that-year**; a year abstains entirely if it has too few looks t
 - **Tried:** per-epoch veto — mark the year bare if *any* clear look is not-snow, and require snow
   in *every* clear look to call it perennial. **Result:** the map emptied out. Over 15–40 looks a
   year, a genuinely perennial pixel *always* catches a stray not-snow look — thin cloud dropping
-  NDSI below threshold, a look taken far from the ablation minimum, a mixed edge pixel. Demanding perfection across all
-  looks disqualifies essentially every real pixel.
+  NDSI below threshold, a mixed edge pixel. Demanding perfection across all looks disqualifies essentially every real pixel.
 - **Fixed:** decide the year on the *fraction* of clear looks that are snow, tolerating a noise
   minority. Bare becomes a property of the year, not of any single observation.
 
@@ -274,6 +273,70 @@ decided pixels only):
 
 ---
 
+## 13. Vegetation is an independent mask, not another class in the snow pipeline
+
+The land-cover extension derives vegetation from NDVI in a **separate pipeline** on the same grid,
+then fuses the two masks — rather than adding a vegetation branch inside the perennial classifier.
+
+**Why:** the two questions have different natural time bases. Perennial snow needs multi-year
+persistence over a narrow ablation-minimum window, because the whole definition is survival across
+years. Vegetation extent is effectively static, and its problem is accumulating enough clear looks —
+a wider window and more years, used for coverage rather than for trend. Forcing both through one
+per-year verdict would compromise whichever question lost the argument.
+
+Keeping them separate also buys the contradiction check in #15. Two independent derivations that
+disagree nowhere is evidence about both; a single classifier that assigns one label per pixel cannot
+contradict itself and so cannot be tested this way.
+
+---
+
+## 14. Percentile composite over three summers, not a single date and not a time series
+
+Each pixel is reduced to the **90th percentile** of its clear NDVI values across 2022–2024.
+
+**Why not a single date:** this AOI is severely cloud-limited. A large fraction of searched
+acquisitions contribute no clear pixel at all over the cirque, and any single date leaves most of the
+AOI unobserved.
+
+**Why not a time series:** vegetation extent does not meaningfully change over three years at 30 m in
+this terrain. The years are there to accumulate looks, not to measure a trend, and the write-up says
+so — reporting it as multi-year would imply a change signal that is not being measured.
+
+**Why p90 and not the maximum:** the maximum is a single observation and inherits whatever was wrong
+with it — residual haze, an unflagged cloud edge, a mixed pixel at one acquisition geometry. p90 keeps
+the greenest state a pixel was genuinely observed in without riding on one outlier.
+
+**Threshold at 0.30 sits in a gap, not on a slope.** The composite distribution is strongly bimodal
+(p25 ≈ 0.02, p75 ≈ 0.74). The threshold falls in the valley between the modes, so moving it anywhere
+across that gap reclassifies few pixels — the mask does not depend on a finely tuned number. It is
+deliberately conservative: this mask exists to *anchor* a downstream susceptibility model, where a
+false vegetation call is more damaging than a missed marginal one.
+
+---
+
+## 15. Rescue is one-directional, and the residue stays its own class
+
+Fusing the two masks resolves snow-unknowns using vegetation evidence, but only in one direction: a
+pixel NDVI **positively** calls vegetation is resolved; `veg = 0` resolves nothing.
+
+**Why:** "NDVI did not see vegetation" is not evidence of snow. It is consistent with bare rock, with
+snow the perennial pipeline could not confirm, and with a mixed or marginal pixel. Treating a negative
+as a positive for the other class would manufacture verdicts from absence of evidence — the same error
+#9 exists to prevent.
+
+**Why the residue is not folded into bare ground.** After rescue, the unresolved remainder is kept as
+its own class. Bare is a positive finding: the pipeline looked and saw not-snow, not-vegetation. The
+residue is the absence of any finding. Merging them would convert an honest gap into a confident
+classification, and would hide the residue's structure — which is the most informative thing about it.
+
+**The residue is explainable.** It is the steepest class in the AOI and the only north-facing one,
+every other class facing south. That is the same steep, shadowed terrain where §12's Theia
+disagreements concentrate and where the change study's aspect limit bites: both masks abstain there
+for the same physical reason. Reporting it separately keeps that visible; merging it would have
+buried a real, structured observational limit inside a class that looks like a result.
+
+---
+
 ## Localisation notes (revisit for wide-area / operational use)
 
 - `MAX_BARE_YEARS = 2` is an absolute count, defensible for this 8-year study (2/8 = 25%). For runs
@@ -287,6 +350,16 @@ decided pixels only):
 - **Operational hardening deferred:** same-date multi-product merging and cross-platform temporal
   fusion (as in the LIS `snow_annual_map` pipeline) are not implemented; they matter for wide-area,
   many-tile runs, not for this single-AOI study.
+- **The land-cover extension is a local study and assumes this AOI's surface inventory.** Beas Kund is
+  entirely high alpine, so bare is genuinely rock and scree and a two-way vegetation/bare split is
+  sufficient. Applying the same fusion anywhere lower would need explicit separation of at least urban
+  surface and agriculture — both of which NDVI would otherwise sort arbitrarily into vegetation or
+  bare, and neither of which exists here. The AOI was chosen partly because it is ground known
+  first-hand, which is what makes the two-class assumption checkable at all.
+- **Bare is not subdivided.** Moraine, talus and bedrock are one class. The literature separates them
+  via surface-roughness and texture categorisation on Sentinel imagery, which would give a
+  substantially richer ground-cover factor for the downstream model. Not attempted here, and not
+  validated by this work.
 
 ---
 

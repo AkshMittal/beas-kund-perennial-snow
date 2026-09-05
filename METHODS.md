@@ -178,6 +178,81 @@ Neither Theia-only group is classification error.
 
 ---
 
+## 10. Land cover extension
+
+The perennial mask answers one question — is this surface snow that persists? A downstream avalanche
+susceptibility model needs a broader ground-cover factor, so the perennial mask is extended into a
+combined land-cover raster by fusing it with an independently derived vegetation mask.
+
+### 10.1 Vegetation mask (NDVI percentile composite)
+
+A static vegetation-vs-bare mask on the **same 30 m UTM grid and AOI** as the perennial pipeline, so
+the two masks co-register cell-for-cell and combine without resampling.
+
+Same three sensors, same per-acquisition unit model, same reflectance-screen-before-index discipline
+as §2–§4. NDVI = `(NIR − red) / (NIR + red)`, with both bands required finite and `> 0` before the
+ratio — scaled nodata (≈ −0.1) would otherwise yield a plausible-looking NDVI, and near-zero
+denominators diverge.
+
+Window: 15 June – 30 September, 2022–2024, peak greenness and post-melt.
+
+The three years are **not a time series**. Vegetation extent is effectively static over three years at
+this scale; the years exist only to accumulate clear looks against monsoon cloud. Each pixel is
+reduced by a **90th-percentile composite** over all its clear NDVI values — the pixel at its greenest
+across every observation of it. p90 rather than the maximum because the maximum is a single
+observation and inherits whatever was wrong with it.
+
+Vegetation where composite NDVI > 0.30. The composite distribution is strongly bimodal (a mass near
+zero for rock, scree and snow; a mass above 0.7 for dense vegetation), so the threshold sits in the
+valley between modes and the mask is insensitive to its exact value.
+
+Pixels with no clear look abstain (`-1`) rather than defaulting to not-vegetation, preserving the same
+seen-versus-unseen distinction the perennial mask maintains. Clear-look count per pixel is retained as
+a confidence layer.
+
+### 10.2 Fusion
+
+Two questions are asked before combining.
+
+**Contradiction.** Perennial snow and vegetation are physically exclusive — surface surviving the
+ablation minimum every year cannot be vegetated — so any overlap indicates an error in one mask. The
+contested count is reported against the perennial total rather than the AOI, perennial being the far
+smaller class.
+
+**Resolution.** The perennial mask leaves `undecided` (seen, no verdict) and `no-data` (never seen
+clear) pixels. A pixel that NDVI **positively** calls vegetation is resolved to vegetation. This is
+one-directional: vegetation evidence can fill a snow unknown, but a vegetation negative is not
+evidence of snow, so `veg = 0` resolves nothing.
+
+What remains is reported as an explicit `residue` class rather than folded into bare ground, on the
+same principle as §7 — "nothing resolved this" and "this is bare" are different statements. The
+residue is further split by cause: NDVI saw it and called it not-vegetation (genuine surface
+ambiguity) versus neither method saw it (acquisition gap).
+
+Final classes: bare rock/scree, vegetation, perennial snow/ice, water, residue. Precedence is
+deliberate — perennial and water are asserted classes and are never overwritten; vegetation takes what
+remains; residue is what nothing could claim.
+
+### 10.3 Validation against terrain
+
+Copernicus GLO-30, reprojected onto the perennial grid, is used to test the classification against
+terrain. Nothing derived from the DEM feeds back into the classification.
+
+**Elevation stratification.** If the classes are correct they should order up the mountain: vegetation
+lowest, perennial highest, residue as the transition belt between them where neither method is
+confident. Reported in two forms — the literal test using the vegetation maximum **fails**, as a
+handful of high outlier pixels exceed the residue mean; the robust test using the vegetation p90
+holds. The ordering is a tendency, not a hard boundary, and only the robust form is relied on.
+
+**Terrain of the residue.** Slope and northness (`cos(aspect)`) per class show the residue is the
+steepest class in the AOI and the only north-facing one, every other class facing south. Steep,
+shadowed terrain is where optical sensors carry least signal and both masks abstain for the same
+physical reason — the same aspect-linked limit already reported in §9 for the Theia disagreements and
+in the change study. The residue is therefore explainable rather than merely leftover; no radiometric
+mechanism is claimed.
+
+---
+
 ## References
 
 - **Selkowitz, D. J. & Forster, R. R.** — automated mapping of persistent ice and snow cover from

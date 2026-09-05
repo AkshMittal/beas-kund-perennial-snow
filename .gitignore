@@ -3,6 +3,9 @@ cache_perennial/
 cache_perennial_mb/
 out_perennial/
 out_perennial_mb/
+cache_ndvi/
+out_ndvi/
+out_combined/
 *.npy
 
 # reference data downloads (large; fetched via py-hydroweb, not versioned)
@@ -13,7 +16,7 @@ theia_snt/
 *.tif
 !figures/*.png
 
-# credentials — NEVER commit
+# credentials 
 .env
 *api_key*
 *API_KEY*

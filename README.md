@@ -20,6 +20,8 @@ required factor and perennial snow can act as a separate land cover layer for th
   mask** with an explicit reason for every pixel (perennial / not-perennial / undecided / no-data / water).
 - Measures **interannual change** on a fixed observable pixel set (change on the *same ground* every
   year, not sampling drift).
+- Extends the mask into a **combined land cover** raster (bare / vegetation / perennial / water /
+  residue) by fusing it with an independently derived NDVI vegetation mask on the same grid.
 
 ## Key results
 
@@ -35,9 +37,9 @@ required factor and perennial snow can act as a separate land cover layer for th
   glacier tongues that Theia excludes via its DEM snowline gate, and is slightly more conservative on
   shadowed north-facing slopes.
   ![additional cells that theia excludes](figures/additional_NDSI_mapping_that_theia_excludes.png)
-
-
-
+- **Extension** towards land cover classification incorporating vegetation index (NDVI) and checking for overlap/disagreements and outputting a combined landcover tiff. 
+  ![land cover](figures/land_cover.png)
+ 
 ---
 
 ## Method (short)
@@ -51,6 +53,8 @@ required factor and perennial snow can act as a separate land cover layer for th
 | 5 | Multi-year persistence → perennial mask, with asymmetric evidence and an explicit no-data/water/undecided split |
 | 6 | Visualize |
 | 7 | Interannual change on a fixed observable intersection |
+| 8 | Vegetation mask: NDVI p90 composite over clear summer looks, same grid |
+| 9 | Fuse into combined land cover; audit the fusion against terrain |
 
 The full rationale for every non-obvious choice — including the approaches tried and abandoned — is in
 [`DECISIONS.md`](DECISIONS.md). The formal methodology and citations are in [`METHODS.md`](METHODS.md).
@@ -67,7 +71,9 @@ beas-kund-perennial-snow/
 ├── requirements.txt
 ├── notebooks/
 │   ├── perennial_snow_beas_kund.ipynb    # the study (Beas Kund)
-│   └── validation_mont_blanc.ipynb       # cross-validation vs Theia LIS SCD
+│   ├── validation_mont_blanc.ipynb       # cross-validation vs Theia LIS SCD
+│   ├── vegetation_ndvi_mask.ipynb        # NDVI p90 vegetation mask, same grid
+│   └── landcover_combination.ipynb       # fuse snow + vegetation → land cover
 └── figures/
 ```
 
@@ -83,6 +89,11 @@ pip install -r requirements.txt
 
 **Study.** Open `notebooks/perennial_snow_beas_kund.ipynb` and run top to bottom. Stage 3 fetches and
 classifies imagery once and caches it to disk; every later run reuses the cache and is offline.
+
+**Land cover.** Run `notebooks/vegetation_ndvi_mask.ipynb` first (it writes `veg_mask.tif` and caches
+its own NDVI epochs), then `notebooks/landcover_combination.ipynb`, which reads that alongside the
+perennial mask and writes the combined raster. Both use the same grid config as the study, so they
+must not be re-pointed at a different bbox or resolution.
 
 **Validation.** The pipeline is AOI-agnostic — the validation runs the same pipeline over a Mont Blanc
 config (bbox `[6.80,45.80,7.05,45.95]`, `UTM=EPSG:32632`, Alpine September window), then
@@ -110,6 +121,18 @@ export HYDROWEB_API_KEY=...
 - The ablation-minimum timing weighting is a phenology-grounded **heuristic**, not a derived formula.
 - Thresholds are tuned for these AOIs; wide-area / operational use would need re-grounding
   (see the localisation notes in `DECISIONS.md`).
+- The **land-cover extension is a local study**. Beas Kund is entirely high alpine, so "bare" is
+  genuinely rock and scree and a two-way vegetation/bare split holds. Anywhere lower would need
+  explicit separation of urban surface and agriculture, neither of which exists here. The AOI is
+  ground known first-hand, which is what makes that assumption checkable.
+- Bare is **not subdivided** — moraine, talus and bedrock are one class. Separating them via
+  surface-roughness/texture categorisation on Sentinel imagery is documented in the literature and
+  would materially improve the ground-cover factor; it is not attempted or validated here.
+- The AOI is **severely cloud-limited**. A large share of searched acquisitions contribute no clear
+  pixel at all, which is why the vegetation mask composites three summers rather than using one date.
+- The residue class is not noise: it concentrates on the steepest, north-facing, shadowed terrain —
+  the same aspect-linked observational limit reported for the change study and the Theia
+  disagreements. It is reported as its own class rather than merged into bare.
 
 ## License
 

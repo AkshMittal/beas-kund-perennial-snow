@@ -279,5 +279,3 @@ mechanism is claimed.
 - **MODIS / VIIRS snow-cover ATBD** — reflectance and low-VIS screens applied before NDSI.
 - Copernicus **GLO-30 DEM** — elevation for the validation disagreement analysis.
 
-> Full citation details (authors, venues, DOIs) to be completed before publication — several entries
-> above are identified by description and need their bibliographic records filled in.
